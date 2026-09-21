@@ -4,6 +4,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="theme-color" content="#123a2c">
     <title>VetCare Rural | Village Hospital Management System</title>
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
     <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
@@ -127,29 +128,41 @@
             overflow: hidden;
         }
 
-        :root { --sidebar-width: 260px; --sidebar-collapsed-width: 84px; }
+        :root { --sidebar-width: 260px; --sidebar-collapsed-width: 84px; --topbar-height: 62px; --page-pad: 40px; }
 
-        .main-content {
+        /* ---- Page padding scales with the viewport ---- */
+        @media (max-width: 1199.98px) { :root { --page-pad: 32px; } }
+        @media (max-width: 991.98px)  { :root { --page-pad: 24px; } }
+        @media (max-width: 767.98px)  { :root { --page-pad: 16px; } }
+        @media (max-width: 374.98px)  { :root { --page-pad: 12px; } }
+
+        @keyframes fadeInPage { from { opacity: 0; transform: translateY(6px);} to { opacity: 1; transform: translateY(0);} }
+
+        /* ---- Main content: always fills whatever space the sidebar leaves free ----
+           (No Bootstrap col-* width / ms-auto here, so collapsing the sidebar can never leave a blank gap.) */
+        main.main-content {
+            flex: 1 1 0%;
+            width: auto;
+            min-width: 0;
+            max-width: 100%;
             margin-left: var(--sidebar-width);
-            padding: 40px !important;
+            padding: var(--page-pad);
             animation: fadeInPage 0.4s ease;
             transition: margin-left 0.3s cubic-bezier(0.4, 0, 0.2, 1);
         }
 
-        @keyframes fadeInPage { from { opacity: 0; transform: translateY(6px);} to { opacity: 1; transform: translateY(0);} }
-
-        #app-sidebar { width: var(--sidebar-width); transition: width 0.3s cubic-bezier(0.4, 0, 0.2, 1); overflow-x: hidden; }
-        body.sidebar-collapsed #app-sidebar { width: var(--sidebar-collapsed-width); }
-        body.sidebar-collapsed .main-content { margin-left: var(--sidebar-collapsed-width); }
-        body.sidebar-collapsed #app-sidebar .sidebar-text,
-        body.sidebar-collapsed #app-sidebar .brand-text,
-        body.sidebar-collapsed #app-sidebar .lang-theme-bar,
-        body.sidebar-collapsed #app-sidebar .sidebar-user-text,
-        body.sidebar-collapsed #app-sidebar .sidebar-user-edit-icon { display: none !important; }
-        body.sidebar-collapsed #app-sidebar .nav-link { justify-content: center; padding: 12px 0; }
-        body.sidebar-collapsed #app-sidebar .nav-link i { margin-right: 0 !important; }
-        body.sidebar-collapsed #app-sidebar .sidebar-user-pill { justify-content: center; }
-        body.sidebar-collapsed #app-sidebar .sidebar-brand-row { justify-content: center; }
+        /* ---- Sidebar shell ---- */
+        #app-sidebar {
+            position: fixed; top: 0; left: 0;
+            width: var(--sidebar-width);
+            height: 100vh; height: 100dvh; min-height: 0;
+            display: flex !important; flex-direction: column;
+            overflow-x: hidden; overflow-y: auto; scrollbar-width: thin;
+            transition: width 0.3s cubic-bezier(0.4, 0, 0.2, 1), transform 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+        .sidebar .nav-link { display: flex; align-items: center; white-space: nowrap; }
+        .sidebar .nav-link i { width: 1.25rem; text-align: center; flex-shrink: 0; }
+        .sidebar .brand-text { white-space: nowrap; }
 
         .sidebar-collapse-btn {
             width: 34px; height: 34px; border-radius: 10px; border: 1px solid rgba(255,255,255,0.2);
@@ -157,28 +170,45 @@
             cursor: pointer; transition: var(--transition-smooth); flex-shrink: 0;
         }
         .sidebar-collapse-btn:hover { background: rgba(255,255,255,0.18); }
+        .sidebar-collapse-btn.sidebar-close-btn { display: none; }
 
         .mobile-topbar { display: none; }
         .sidebar-backdrop { display: none; }
 
-        @media (max-width: 768px) {
-            #app-sidebar {
-                position: fixed; top: 0; left: 0; height: 100vh; min-height: 100vh; width: var(--sidebar-width) !important;
-                transform: translateX(-100%); z-index: 1000; box-shadow: 8px 0 30px rgba(0,0,0,0.35);
-            }
-            body.sidebar-mobile-open #app-sidebar { transform: translateX(0); }
+        /* ---- Desktop / tablet: icon-only collapsed sidebar ---- */
+        @media (min-width: 768px) {
+            body.sidebar-collapsed #app-sidebar { width: var(--sidebar-collapsed-width); padding: 20px 12px !important; }
+            body.sidebar-collapsed main.main-content { margin-left: var(--sidebar-collapsed-width); }
             body.sidebar-collapsed #app-sidebar .sidebar-text,
             body.sidebar-collapsed #app-sidebar .brand-text,
-            body.sidebar-collapsed #app-sidebar .lang-theme-bar,
+            body.sidebar-collapsed #app-sidebar .lang-theme-bar select,
             body.sidebar-collapsed #app-sidebar .sidebar-user-text,
-            body.sidebar-collapsed #app-sidebar .sidebar-user-edit-icon { display: initial !important; }
-            body.sidebar-collapsed #app-sidebar .nav-link { justify-content: flex-start !important; padding: 12px 20px !important; }
-            body.sidebar-collapsed #app-sidebar .nav-link i { margin-right: 0.5rem !important; }
-            body.sidebar-collapsed #app-sidebar .sidebar-user-pill { justify-content: flex-start !important; }
-            .main-content { margin-left: 0 !important; padding: 18px !important; padding-top: 78px !important; }
+            body.sidebar-collapsed #app-sidebar .sidebar-user-edit-icon { display: none !important; }
+            body.sidebar-collapsed #app-sidebar .lang-theme-bar { justify-content: center; }
+            body.sidebar-collapsed #app-sidebar .nav-link { justify-content: center; padding: 12px 0; }
+            body.sidebar-collapsed #app-sidebar .nav-link i { margin-right: 0 !important; }
+            body.sidebar-collapsed #app-sidebar .sidebar-user-pill { justify-content: center; padding: 8px; }
+            body.sidebar-collapsed #app-sidebar .sidebar-brand-row { flex-direction: column; justify-content: center; gap: 12px; }
+            body.sidebar-collapsed #app-sidebar .sidebar-brand-row .me-2 { margin-right: 0 !important; }
+        }
+
+        /* ---- Mobile: off-canvas drawer + top bar ---- */
+        @media (max-width: 767.98px) {
+            #app-sidebar {
+                width: min(var(--sidebar-width), 86vw);
+                transform: translateX(-102%); visibility: hidden; z-index: 1000; box-shadow: none;
+                transition: transform 0.3s cubic-bezier(0.4, 0, 0.2, 1), visibility 0s linear 0.3s;
+            }
+            body.sidebar-mobile-open #app-sidebar {
+                transform: translateX(0); visibility: visible; box-shadow: 8px 0 30px rgba(0,0,0,0.35);
+                transition: transform 0.3s cubic-bezier(0.4, 0, 0.2, 1), visibility 0s;
+            }
+            body.sidebar-mobile-open { overflow: hidden; }
+            main.main-content { margin-left: 0; padding-top: calc(var(--topbar-height) + 16px); }
+            .sidebar-collapse-btn.sidebar-close-btn { display: flex; }
             .mobile-topbar {
-                display: flex; align-items: center; gap: 14px; position: fixed; top: 0; left: 0; right: 0; height: 62px;
-                background: var(--gradient-sidebar); z-index: 150; padding: 0 18px; box-shadow: 0 4px 16px rgba(0,0,0,0.2);
+                display: flex; align-items: center; gap: 14px; position: fixed; top: 0; left: 0; right: 0; height: var(--topbar-height);
+                background: var(--gradient-sidebar); z-index: 150; padding: 0 16px; box-shadow: 0 4px 16px rgba(0,0,0,0.2);
             }
             .sidebar-backdrop {
                 display: block; position: fixed; inset: 0; background: rgba(15,23,42,0.55); z-index: 900;
@@ -740,10 +770,165 @@
         .table-avatar-stock::after { content: ''; position: absolute; inset: 0; background: linear-gradient(180deg, rgba(15,23,42,0) 45%, rgba(15,23,42,0.45) 100%); }
         .table-avatar-stock i { position: relative; z-index: 1; color: #fff; font-size: 0.6rem; margin: 3px; text-shadow: 0 1px 3px rgba(0,0,0,0.5); }
         body.dark-mode .table-avatar-stock { box-shadow: inset 0 0 0 1px rgba(255,255,255,0.08); }
+
+        /* =====================================================================
+           RESPONSIVE + THEME REFINEMENTS (second improvement pass)
+           ===================================================================== */
+        html { -webkit-text-size-adjust: 100%; }
+        body { overflow-x: hidden; }
+        img, video { max-width: 100%; }
+        .sidebar .nav-link:focus-visible, .sidebar-collapse-btn:focus-visible, .theme-toggle-btn:focus-visible { outline: 2px solid var(--amber-bright); outline-offset: 2px; }
+        @media (prefers-reduced-motion: reduce) {
+            *, *::before, *::after { animation-duration: 0.01ms !important; animation-iteration-count: 1 !important; transition-duration: 0.01ms !important; scroll-behavior: auto !important; }
+        }
+        @media (hover: none) { .card-custom:hover { transform: none; } .sidebar .nav-link:hover { transform: none; } }
+
+        /* ---- Alignment ---- */
+        .species-strip { padding-top: 10px; padding-right: 10px; }
+        .wizard-steps { padding-top: 10px; -webkit-overflow-scrolling: touch; }
+        .wizard-step { min-width: 72px; padding: 2px 0; }
+        .popup-detail-value { min-width: 0; overflow-wrap: anywhere; }
+        .review-row { gap: 12px; }
+        .review-row .value { min-width: 0; overflow-wrap: anywhere; }
+        #vet-profile-overlay { overflow-y: auto; }
+        #vet-profile-card { max-height: calc(100vh - 24px); max-height: calc(100dvh - 24px); overflow-x: hidden; overflow-y: auto; }
+        .table tbody tr:hover > * { --bs-table-bg: #f0fdfa; }
+
+        /* ---- Photo source buttons (Take Photo / Choose from Gallery) ---- */
+        .photo-source-actions { display: flex; gap: 10px; justify-content: center; flex-wrap: wrap; margin-top: 16px; }
+        .photo-source-actions .btn { display: inline-flex; align-items: center; justify-content: center; }
+        .photo-source-actions .btn i { font-size: 1rem; margin-bottom: 0; color: inherit; }
+        .photo-dropzone > div { width: 100%; }
+
+        /* ---- Tablet & below ---- */
+        @media (max-width: 767.98px) {
+            .form-control, .form-select { font-size: 16px; }
+            .btn, .popup-btn-primary, .popup-btn-secondary, .auth-tab-btn { min-height: 44px; }
+            .btn-sm { min-height: 40px; min-width: 40px; }
+            .sidebar-collapse-btn, .theme-toggle-btn { min-width: 40px; min-height: 40px; }
+            .dashboard-hero { padding: 28px 22px; margin-bottom: 24px; }
+            .admission-hero, .records-hero { padding: 24px 20px; margin-bottom: 20px; }
+            .row.g-4 { --bs-gutter-x: 1rem; --bs-gutter-y: 1rem; }
+            .records-search-wrap { min-width: 0 !important; width: 100%; }
+            .btn-excel { width: 100%; }
+
+            /* Tables become stacked cards (no sideways scrolling) */
+            table.mobile-cards, table.mobile-cards tbody, table.mobile-cards tr, table.mobile-cards td { display: block; width: 100%; }
+            table.mobile-cards { border-spacing: 0; white-space: normal !important; }
+            table.mobile-cards thead { display: none; }
+            table.mobile-cards tbody tr { margin-bottom: 12px; padding: 6px 14px; border-radius: 16px; background: var(--surface); border: 1px solid var(--line); box-shadow: 0 2px 10px rgba(15,23,42,0.06); }
+            table.mobile-cards tbody tr:hover { transform: none; }
+            table.mobile-cards td { position: relative; padding: 10px 0 10px 38%; min-height: 42px; border-radius: 0 !important; border-bottom: 1px dashed var(--line); background: transparent; text-align: left; white-space: normal !important; overflow-wrap: anywhere; }
+            table.mobile-cards td:last-child { border-bottom: none; }
+            table.mobile-cards td[data-label]::before { content: attr(data-label); position: absolute; left: 0; top: 10px; width: 34%; padding-right: 8px; font-size: 0.68rem; font-weight: 800; letter-spacing: 0.4px; text-transform: uppercase; color: var(--text-muted); overflow-wrap: anywhere; }
+            table.mobile-cards td:not([data-label]) { padding-left: 0; }
+        }
+
+        /* ---- Phones ---- */
+        @media (max-width: 575.98px) {
+            .card-custom.p-4 { padding: 1.1rem !important; }
+            .revenue-mini-value { font-size: 1.05rem; overflow-wrap: anywhere; }
+            .datetime-badge { font-size: 0.82rem; padding: 7px 14px; }
+            .auth-form-panel { padding: 12px; }
+            .auth-card { padding: 24px 20px; }
+            .app-modal-overlay, #save-popup-overlay, #vet-profile-overlay { padding: 10px; }
+            .app-modal-pad { padding: 20px 16px !important; }
+            #edit-modal-card form { padding-left: 18px !important; padding-right: 18px !important; }
+            #toast-stack { left: 12px; right: 12px; top: 72px; max-width: none; }
+            .login-success-toast { max-width: calc(100vw - 24px); top: 76px; }
+
+            /* Compact stepper: every step visible, only the active label shown */
+            .wizard-steps { overflow: visible; padding-bottom: 28px; margin-bottom: 18px; }
+            .wizard-step { min-width: 0; padding: 4px 0; }
+            .wizard-step::before { top: 19px; }
+            .wizard-step-circle { width: 34px; height: 34px; font-size: 0.8rem; border-width: 2px; }
+            .wizard-step-label { display: none; }
+            .wizard-step.active .wizard-step-label { display: block; position: absolute; top: 100%; left: 50%; transform: translateX(-50%); margin-top: 4px; white-space: nowrap; }
+            .wizard-step:first-child.active .wizard-step-label { left: 0; transform: none; }
+            .wizard-step:last-child.active .wizard-step-label { left: auto; right: 0; transform: none; }
+
+            .wizard-nav { gap: 8px; }
+            .wizard-nav > .d-flex { flex: 1 1 auto; }
+            .wizard-nav .btn { padding-left: 14px !important; padding-right: 14px !important; flex: 1 1 auto; white-space: nowrap; }
+
+            .photo-dropzone { padding: 20px 16px; }
+            .photo-source-actions { flex-direction: column; }
+            .photo-source-actions .btn { width: 100%; }
+            .photo-preview-wrap { flex-direction: column; align-items: center; text-align: center; }
+            .photo-preview-img { width: 100%; max-width: 220px; height: auto; aspect-ratio: 1; }
+            .photo-preview-actions { justify-content: center; width: 100%; }
+        }
+
+        /* =====================================================================
+           DARK MODE — completion (everything the base dark rules missed)
+           ===================================================================== */
+        :root { --text-strong: #0f172a; --surface: #ffffff; --line: #e2e8f0; --ok-text: #15803d; --due-text: #be123c; --err-text: #ef4444; }
+        body.dark-mode { --text-strong: #f1f5f9; --surface: #111827; --line: #334155; --text-muted: #94a3b8; --ok-text: #4ade80; --due-text: #fb7185; --err-text: #f87171; color-scheme: dark; }
+
+        body.dark-mode ::-webkit-scrollbar-thumb { background: #334155; }
+        body.dark-mode ::-webkit-scrollbar-thumb:hover { background: #475569; }
+
+        /* Tables: Bootstrap 5.3 paints cells with --bs-table-bg, so override the variables */
+        body.dark-mode .table { --bs-table-bg: #141c2e; --bs-table-color: #e2e8f0; --bs-table-border-color: #1e293b; }
+        body.dark-mode .table tbody tr:hover > * { --bs-table-bg: #0f2a2e; }
+        body.dark-mode .table thead th { color: #94a3b8; }
+
+        /* Dashboard stat cards keep their gradients in dark mode */
+        body.dark-mode .card-custom.stat-card-green, body.dark-mode .card-custom.stat-card-primary { background: var(--gradient-primary); }
+        body.dark-mode .card-custom.stat-card-teal { background: var(--gradient-teal); }
+        body.dark-mode .card-custom.stat-card-amber { background: var(--gradient-amber); }
+        body.dark-mode .card-custom.stat-card-rose { background: var(--gradient-rose); }
+
+        body.dark-mode main.main-content .text-success, body.dark-mode .app-modal-card .text-success { color: #4ade80 !important; }
+        body.dark-mode main.main-content .text-danger, body.dark-mode .app-modal-card .text-danger { color: #fb7185 !important; }
+
+        body.dark-mode .btn-outline-custom { background: #0f2027; color: #5eead4; border-color: #115e59; }
+        body.dark-mode .btn-outline-custom:hover { background: #123a3a; color: #99f6e4; }
+        body.dark-mode .popup-btn-secondary:hover { background: #0f2027; border-color: #14b8a6; color: #5eead4; }
+        body.dark-mode .popup-close-btn, body.dark-mode .modal-close-btn { background: #1e293b; color: #94a3b8; }
+        body.dark-mode .popup-close-btn:hover, body.dark-mode .modal-close-btn:hover { background: #334155; color: #f1f5f9; }
+        body.dark-mode .popup-subtitle { color: #94a3b8; }
+        body.dark-mode .popup-detail-row { border-bottom-color: #334155; }
+        body.dark-mode .popup-progress-wrap { background: #1e293b; }
+        body.dark-mode .popup-icon-ring { background: #0f2a1f; }
+        body.dark-mode .popup-icon-ring i { color: #4ade80; }
+        body.dark-mode .vet-profile-photo-circle { background: #1e1b4b; }
+        body.dark-mode .vet-profile-photo-circle i { color: #a5b4fc; }
+        body.dark-mode .vet-profile-photo-btn { background: #1e1b4b; color: #c7d2fe; border-color: #3730a3; }
+        body.dark-mode .vet-profile-photo-remove-btn { background: #4c0519; color: #fda4af; border-color: #881337; }
+
+        /* Wizard stepper */
+        body.dark-mode .wizard-step::before { background: #334155; }
+        body.dark-mode .wizard-step.completed::before { background: var(--gradient-primary); }
+        body.dark-mode .wizard-step.active .wizard-step-circle { background: #0f2a2e; color: #5eead4; border-color: #14b8a6; }
+        body.dark-mode .wizard-step.completed .wizard-step-circle { background: var(--gradient-primary); color: #fff; border-color: #15803d; }
+        body.dark-mode .wizard-step.active .wizard-step-label { color: #5eead4; }
+        body.dark-mode .wizard-step.completed .wizard-step-label { color: #4ade80; }
+
+        /* Photo upload, payment + review */
+        body.dark-mode .photo-dropzone .dz-title { color: #e2e8f0; }
+        body.dark-mode .photo-dropzone .dz-hint { color: #94a3b8; }
+        body.dark-mode .photo-dropzone > div > i { color: #2dd4bf; }
+        body.dark-mode .review-block h6 { color: #5eead4; }
+        body.dark-mode .payment-summary-row.pending.due { color: #fb7185; }
+        body.dark-mode .payment-summary-row.pending.clear { color: #4ade80; }
+        body.dark-mode #admissionDateTime { background: #0f2027 !important; color: #86efac !important; }
+        body.dark-mode .avatar-fallback { background: #0f2027 !important; }
+        body.dark-mode .avatar-fallback i { color: #4ade80 !important; }
+
+        /* Badges / chips */
+        body.dark-mode .badge-rural-routine { background: #064e3b; color: #6ee7b7; border-color: #065f46; }
+        body.dark-mode .badge-breeding-ai { background: #1e3a8a; color: #bfdbfe; border-color: #1d4ed8; }
+        body.dark-mode .badge-breeding-sync { background: #3b0764; color: #ddd6fe; border-color: #6b21a8; }
+
+        /* Auth screen toggle */
+        body.dark-mode .auth-lang-theme-bar .theme-toggle-btn { background: #1e293b; border-color: #334155; color: #e2e8f0; }
+        body.dark-mode .auth-tab-btn.active { box-shadow: none; }
     </style>
 </head>
 
 <body>
+<script>try{if(localStorage.getItem("vetcare_rural_theme")==="dark"){document.body.classList.add("dark-mode");document.documentElement.setAttribute("data-bs-theme","dark");document.documentElement.style.colorScheme="dark";}}catch(e){}</script>
 
     <!-- ===================== AUTH SCREEN ===================== -->
     <div id="auth-screen" style="display:none;">
@@ -771,7 +956,7 @@
                             <option value="te">తెలుగు</option>
                             <option value="hi">हिन्दी</option>
                         </select>
-                        <button type="button" class="theme-toggle-btn" onclick="toggleTheme()" title="Toggle theme">
+                        <button type="button" class="theme-toggle-btn" onclick="toggleTheme()" title="Toggle theme" aria-label="Toggle dark mode">
                             <i class="fa-solid fa-moon" id="authThemeToggleIcon"></i>
                         </button>
                     </div>
@@ -857,7 +1042,7 @@
         <div class="container-fluid p-0">
             <div class="row g-0">
                 <div class="mobile-topbar">
-                    <button type="button" class="sidebar-collapse-btn" onclick="toggleMobileSidebar()" title="Menu">
+                    <button type="button" class="sidebar-collapse-btn" onclick="toggleMobileSidebar()" title="Menu" aria-label="Open menu">
                         <i class="fa-solid fa-bars"></i>
                     </button>
                     <div class="d-flex align-items-center gap-2">
@@ -868,7 +1053,7 @@
                     </div>
                 </div>
                 <div id="sidebarBackdrop" class="sidebar-backdrop" onclick="closeMobileSidebar()"></div>
-                <nav id="app-sidebar" class="col-md-3 col-lg-2 d-md-block sidebar p-4">
+                <nav id="app-sidebar" class="sidebar p-4" aria-label="Main navigation">
                     <div>
                         <div class="d-flex align-items-center justify-content-between mb-4 text-white text-decoration-none sidebar-brand-row">
                             <div class="d-flex align-items-center">
@@ -877,8 +1062,11 @@
                                 </div>
                                 <span class="fs-5 fw-bold tracking-tight brand-text">VetCare Rural<span style="color: #4ade80">.</span></span>
                             </div>
-                            <button type="button" class="sidebar-collapse-btn d-none d-md-flex" onclick="toggleSidebarCollapse()" id="sidebarCollapseBtn" title="Collapse sidebar">
+                            <button type="button" class="sidebar-collapse-btn d-none d-md-flex" onclick="toggleSidebarCollapse()" id="sidebarCollapseBtn" title="Collapse sidebar" aria-label="Collapse sidebar" aria-expanded="true">
                                 <i class="fa-solid fa-bars"></i>
+                            </button>
+                            <button type="button" class="sidebar-collapse-btn sidebar-close-btn" onclick="closeMobileSidebar()" title="Close menu" aria-label="Close menu">
+                                <i class="fa-solid fa-xmark"></i>
                             </button>
                         </div>
                         <hr style="border-color: rgba(255,255,255,0.15)">
@@ -909,7 +1097,7 @@
                                 <option value="te">తెలుగు</option>
                                 <option value="hi">हिन्दी</option>
                             </select>
-                            <button type="button" class="theme-toggle-btn" onclick="toggleTheme()" title="Toggle theme">
+                            <button type="button" class="theme-toggle-btn" onclick="toggleTheme()" title="Toggle theme" aria-label="Toggle dark mode">
                                 <i class="fa-solid fa-moon" id="themeToggleIcon"></i>
                             </button>
                         </div>
@@ -927,7 +1115,7 @@
                     </div>
                 </nav>
 
-                <main class="col-md-9 ms-sm-auto col-lg-10 main-content">
+                <main class="main-content">
 
                     <!-- ===== DASHBOARD VIEW ===== -->
                     <div id="dashboard-view" class="view-section active-view">
@@ -952,7 +1140,7 @@
                         </div>
 
                         <div class="row mb-5 g-3">
-                            <div class="col-md-3">
+                            <div class="col-12 col-sm-6 col-xl-3">
                                 <div class="card card-custom p-4 stat-card-green">
                                     <div class="d-flex justify-content-between align-items-center">
                                         <div>
@@ -968,7 +1156,7 @@
                                     </div>
                                 </div>
                             </div>
-                            <div class="col-md-3">
+                            <div class="col-12 col-sm-6 col-xl-3">
                                 <div class="card card-custom p-4 stat-card-teal">
                                     <div class="d-flex justify-content-between align-items-center">
                                         <div>
@@ -984,7 +1172,7 @@
                                     </div>
                                 </div>
                             </div>
-                            <div class="col-md-3">
+                            <div class="col-12 col-sm-6 col-xl-3">
                                 <div class="card card-custom p-4 stat-card-amber">
                                     <div class="d-flex justify-content-between align-items-center">
                                         <div>
@@ -1000,7 +1188,7 @@
                                     </div>
                                 </div>
                             </div>
-                            <div class="col-md-3">
+                            <div class="col-12 col-sm-6 col-xl-3">
                                 <div class="card card-custom p-4 stat-card-rose">
                                     <div class="d-flex justify-content-between align-items-center">
                                         <div>
@@ -1035,7 +1223,7 @@
                                 </div>
                             </div>
                             <div class="table-responsive">
-                                <table class="table align-middle mb-0" id="pendingPaymentsTable">
+                                <table class="table align-middle mb-0 mobile-cards" id="pendingPaymentsTable">
                                     <thead>
                                         <tr>
                                             <th>Customer</th><th>Animal</th><th>Admission ID</th><th>Purpose</th>
@@ -1212,16 +1400,22 @@
                                                     <i class="fa-solid fa-cloud-arrow-up"></i>
                                                     <div class="dz-title" data-i18n="drop_photo_here">Drag & drop a photo, or click to browse</div>
                                                     <div class="dz-hint" data-i18n="photo_types_hint">JPG, JPEG, PNG or WEBP — up to 5MB</div>
+                                                    <div class="photo-source-actions">
+                                                        <button type="button" class="btn btn-custom" id="takePhotoBtn" onclick="event.stopPropagation(); openAnimalPhotoCamera();"><i class="fa-solid fa-camera me-2"></i><span data-i18n="take_photo">Take Photo</span></button>
+                                                        <button type="button" class="btn btn-outline-custom" id="chooseGalleryBtn" onclick="event.stopPropagation(); openAnimalPhotoGallery();"><i class="fa-solid fa-images me-2"></i><span data-i18n="choose_gallery">Choose from Gallery</span></button>
+                                                    </div>
                                                 </div>
                                             </div>
                                             <div id="photoPreviewWrap" class="photo-preview-wrap" style="display:none;">
                                                 <img id="photoPreviewImg" class="photo-preview-img" src="" alt="Animal photo preview">
                                                 <div class="photo-preview-actions">
-                                                    <button type="button" class="btn btn-outline-custom btn-sm" onclick="document.getElementById('animalPhotoInput').click()"><i class="fa-solid fa-rotate me-1"></i><span data-i18n="change_photo">Change Photo</span></button>
+                                                    <button type="button" class="btn btn-outline-custom btn-sm" onclick="openAnimalPhotoCamera()"><i class="fa-solid fa-camera me-1"></i><span data-i18n="retake_photo">Retake</span></button>
+                                                    <button type="button" class="btn btn-outline-custom btn-sm" onclick="openAnimalPhotoGallery()"><i class="fa-solid fa-rotate me-1"></i><span data-i18n="change_photo">Change Photo</span></button>
                                                     <button type="button" class="btn btn-outline-danger btn-sm" onclick="removeAnimalPhoto()"><i class="fa-solid fa-trash-can me-1"></i><span data-i18n="remove_photo">Remove</span></button>
                                                 </div>
                                             </div>
                                             <input type="file" id="animalPhotoInput" accept="image/jpeg,image/jpg,image/png,image/webp" style="display:none;" onchange="handleAnimalPhotoSelect(event)">
+                                            <input type="file" id="animalPhotoCameraInput" accept="image/*" capture="environment" style="display:none;" onchange="handleAnimalPhotoSelect(event)">
                                             <div id="photoError" class="text-danger small mt-2" style="min-height:16px;"></div>
                                         </div>
                                     </div>
@@ -1327,7 +1521,7 @@
                         </div>
 
                         <div class="d-flex flex-column flex-md-row justify-content-between align-items-start align-items-md-center mb-4 gap-3">
-                            <div style="min-width: 280px;">
+                            <div class="records-search-wrap" style="min-width: 280px;">
                                 <input type="text" id="searchInput" class="form-control" data-i18n-placeholder="search_ph" placeholder="🔍 Search by owner, mobile, tag..." onkeyup="filterRecords()">
                             </div>
                             <button class="btn btn-excel" onclick="downloadExcel()">
@@ -1339,7 +1533,7 @@
                             <div class="col-12">
                                 <div class="card card-custom p-3">
                                     <div class="table-responsive">
-                                        <table class="table align-middle text-nowrap mb-0" id="recordsTable">
+                                        <table class="table align-middle text-nowrap mb-0 mobile-cards" id="recordsTable">
                                             <thead class="text-secondary opacity-75">
                                                 <tr>
                                                     <th data-i18n="th_id">ID</th>
@@ -1420,7 +1614,7 @@
                     <i class="fa-solid fa-trash-can" style="font-size:1.9rem;color:#be123c;"></i>
                 </div>
             </div>
-            <h4 style="text-align:center;font-weight:800;font-size:1.25rem;color:#0f172a;margin:0 0 4px 0;padding:0 28px;" data-i18n="confirm_deletion">Confirm Deletion</h4>
+            <h4 style="text-align:center;font-weight:800;font-size:1.25rem;margin:0 0 4px 0;padding:0 28px;" data-i18n="confirm_deletion">Confirm Deletion</h4>
             <p style="text-align:center;color:#64748b;font-size:0.85rem;margin:0 0 6px 0;padding:0 28px;">
                 <span data-i18n="about_to_delete">You are about to permanently delete:</span> <strong id="deleteConfirmAnimal"></strong>
             </p>
@@ -1451,7 +1645,7 @@
             <div class="modal-accent-bar" style="background:var(--gradient-teal);"></div>
             <button onclick="closeEditModal()" class="modal-close-btn" title="Close"><i class="fa-solid fa-xmark"></i></button>
             <div style="padding:24px 28px 0;">
-                <h4 style="font-weight:800;font-size:1.2rem;color:#0f172a;margin:0 0 2px 0;">
+                <h4 style="font-weight:800;font-size:1.2rem;margin:0 0 2px 0;">
                     <i class="fa-solid fa-pen-to-square me-2 text-success"></i><span data-i18n="edit_admission_record">Edit Admission Record</span>
                 </h4>
                 <p style="color:#64748b;font-size:0.82rem;margin:0 0 18px 0;"><span data-i18n="id_label">ID:</span> <strong id="editAdmissionId"></strong></p>
@@ -1462,7 +1656,7 @@
                         <label class="form-label fw-semibold small" data-i18n="animal_photo">Animal Photo</label>
                         <div class="photo-preview-wrap">
                             <img id="editPhotoPreviewImg" class="photo-preview-img" src="" alt="Animal photo" style="display:none;">
-                            <div id="editPhotoPlaceholder" style="width:110px;height:110px;border-radius:16px;background:#d1fae5;display:flex;align-items:center;justify-content:center;flex-shrink:0;">
+                            <div id="editPhotoPlaceholder" class="avatar-fallback" style="width:110px;height:110px;border-radius:16px;background:#d1fae5;display:flex;align-items:center;justify-content:center;flex-shrink:0;">
                                 <i class="fa-solid fa-image" style="font-size:1.8rem;color:#166534;"></i>
                             </div>
                             <div class="photo-preview-actions">
@@ -1554,7 +1748,7 @@
         <div id="animal-analytics-card" class="app-modal-card" style="max-width:760px;">
             <div class="modal-accent-bar" style="background:var(--gradient-teal);"></div>
             <button onclick="closeAnimalAnalytics()" class="modal-close-btn" title="Close"><i class="fa-solid fa-xmark"></i></button>
-            <div style="padding:28px;">
+            <div class="app-modal-pad" style="padding:28px;">
                 <h4 class="fw-bold mb-1" id="animalAnalyticsTitle">Animal Analytics</h4>
                 <p class="text-muted mb-3" id="animalAnalyticsSubtitle" style="font-size:0.85rem;">Entry &amp; payment analytics for this animal type</p>
                 <div class="analytics-filter-btns mb-3" id="animalAnalyticsFilterBtns">
@@ -1603,7 +1797,7 @@
         <div id="payment-detail-card" class="app-modal-card" style="max-width:480px;">
             <div class="modal-accent-bar" style="background:var(--gradient-rose);"></div>
             <button onclick="closePaymentDetail()" class="modal-close-btn" title="Close"><i class="fa-solid fa-xmark"></i></button>
-            <div style="padding:28px;">
+            <div class="app-modal-pad" style="padding:28px;">
                 <h5 class="fw-bold mb-1">Payment Details</h5>
                 <p class="text-muted mb-3" style="font-size:0.82rem;">Admission <strong id="paymentDetailAdmissionId">—</strong></p>
                 <div class="popup-details" style="margin:0 0 18px;">
@@ -1719,11 +1913,26 @@
         options = options || {};
         const headers = Object.assign({ 'Content-Type': 'application/json' }, options.headers || {});
         if (authToken) headers['Authorization'] = 'Bearer ' + authToken;
+        const method = (options.method || 'GET').toUpperCase();
+        /* Free-tier hosts (e.g. Render) can take a while to wake up and answer the first requests with
+           an error that has no CORS headers, which the browser reports as a plain network failure.
+           Safe requests (GETs and login) are therefore retried a few times before giving up. */
+        const retryDelays = (location.protocol !== 'file:' && (method === 'GET' || path === '/auth/login')) ? [3000, 6000, 10000] : [];
         let res;
-        try {
-            res = await fetch(API_BASE + path, Object.assign({}, options, { headers }));
-        } catch (netErr) {
-            throw new Error('Could not reach the server. Please check your connection.');
+        for (let attempt = 0; ; attempt++) {
+            try {
+                res = await fetch(API_BASE + path, Object.assign({}, options, { headers }));
+                break;
+            } catch (netErr) {
+                console.error('[VetCare] Request failed:', method, API_BASE + path, '| page origin:', location.origin, '|', netErr);
+                if (attempt < retryDelays.length) {
+                    if (attempt === 0) showToast('Server is waking up… retrying', 'info');
+                    await new Promise(r => setTimeout(r, retryDelays[attempt]));
+                    continue;
+                }
+                throw new Error('Could not reach the server. Please check your connection.' +
+                    (location.protocol === 'file:' ? ' (This page is opened straight from a file, so the browser blocks the request — open your deployed site instead.)' : ''));
+            }
         }
         let body = null;
         try { body = await res.json(); } catch (e) { /* no body */ }
@@ -2135,6 +2344,7 @@
     function handleLogout() {
         const confirmed = confirm(t('confirm_logout'));
         if (!confirmed) return;
+        closeMobileSidebar();
         currentUser = null;
         authToken = null;
         localStorage.removeItem(LS_SESSION);
@@ -2184,27 +2394,58 @@
 
     /* ============= COLLAPSIBLE SIDEBAR ============= */
     const LS_SIDEBAR = 'vetcare_rural_sidebar_collapsed';
-    function initSidebarState() {
-        let collapsed = false;
-        try { collapsed = localStorage.getItem(LS_SIDEBAR) === '1'; } catch(e) {}
-        document.body.classList.toggle('sidebar-collapsed', collapsed);
+    const MOBILE_MQ = window.matchMedia('(max-width: 767.98px)');
+    const TABLET_MQ = window.matchMedia('(min-width: 768px) and (max-width: 1023.98px)');
+    function isMobileViewport() { return MOBILE_MQ.matches; }
+    function getSidebarPref() { try { return localStorage.getItem(LS_SIDEBAR); } catch (e) { return null; } }
+    function updateSidebarToggleUi(collapsed) {
+        const btn = document.getElementById('sidebarCollapseBtn');
+        if (!btn) return;
+        const label = collapsed ? 'Expand sidebar' : 'Collapse sidebar';
+        btn.title = label;
+        btn.setAttribute('aria-label', label);
+        btn.setAttribute('aria-expanded', collapsed ? 'false' : 'true');
     }
+    /* Saved choice wins; with no saved choice, tablets start icon-only and desktops start expanded. */
+    function applySidebarState() {
+        const pref = getSidebarPref();
+        const collapsed = pref === '1' ? true : (pref === '0' ? false : TABLET_MQ.matches);
+        document.body.classList.toggle('sidebar-collapsed', collapsed);
+        updateSidebarToggleUi(collapsed);
+    }
+    function initSidebarState() { applySidebarState(); }
     function toggleSidebarCollapse() {
-        if (window.innerWidth <= 768) { toggleMobileSidebar(); return; }
+        if (isMobileViewport()) { toggleMobileSidebar(); return; }
         const collapsed = document.body.classList.toggle('sidebar-collapsed');
         try { localStorage.setItem(LS_SIDEBAR, collapsed ? '1' : '0'); } catch(e) {}
+        updateSidebarToggleUi(collapsed);
+        scheduleChartResize();
     }
     function toggleMobileSidebar() { document.body.classList.toggle('sidebar-mobile-open'); }
     function closeMobileSidebar() { document.body.classList.remove('sidebar-mobile-open'); }
-    window.addEventListener('resize', function() { if (window.innerWidth > 768) closeMobileSidebar(); });
+    function resizeAllCharts() {
+        [flowChart, servicePieChart, animalAnalyticsPieChart].forEach(function (c) {
+            if (c && typeof c.resize === 'function') { try { c.resize(); } catch (e) {} }
+        });
+    }
+    let _chartResizeTimer = null;
+    function scheduleChartResize() { clearTimeout(_chartResizeTimer); _chartResizeTimer = setTimeout(resizeAllCharts, 360); }
+    window.addEventListener('resize', function() {
+        if (!isMobileViewport()) closeMobileSidebar();
+        applySidebarState();
+        scheduleChartResize();
+    });
+    document.addEventListener('keydown', function (e) { if (e.key === 'Escape') closeMobileSidebar(); });
 
     window.addEventListener('DOMContentLoaded', async function() {
         initTheme();
         initLanguage();
         initSidebarState();
+        setupPhotoDropzone();
         const savedToken = localStorage.getItem(LS_SESSION);
         if (savedToken) {
             authToken = savedToken;
+            document.getElementById('app-loading-overlay').style.display = 'flex';
             try {
                 const res = await api('/auth/me', { method: 'GET' });
                 await enterApp(res.doctor.username);
@@ -2213,11 +2454,11 @@
                 // Token expired/invalid — fall through to the login screen.
                 authToken = null;
                 localStorage.removeItem(LS_SESSION);
+                document.getElementById('app-loading-overlay').style.display = 'none';
             }
         }
         document.getElementById('auth-screen').style.display = 'flex';
         applyLanguage(currentLang);
-        setupPhotoDropzone();
     });
 
     /* ============= VIEW SWITCHING ============= */
@@ -2381,7 +2622,8 @@
 
     function setupPhotoDropzone() {
         const zone = document.getElementById('photoDropzone');
-        if (!zone) return;
+        if (!zone || zone.dataset.dzBound) return;
+        zone.dataset.dzBound = '1';
         ['dragenter', 'dragover'].forEach(evt => zone.addEventListener(evt, (e) => { e.preventDefault(); zone.classList.add('dragover'); }));
         ['dragleave', 'drop'].forEach(evt => zone.addEventListener(evt, (e) => { e.preventDefault(); zone.classList.remove('dragover'); }));
         zone.addEventListener('drop', (e) => {
@@ -2390,10 +2632,19 @@
         });
     }
 
+    /* Some phone cameras hand back a file with an empty type — fall back to the extension. */
+    function getPhotoMime(file) {
+        if (file.type) return file.type.toLowerCase();
+        const m = /\.(jpe?g|png|webp)$/i.exec(file.name || '');
+        if (!m) return '';
+        const ext = m[1].toLowerCase();
+        return ext === 'png' ? 'image/png' : (ext === 'webp' ? 'image/webp' : 'image/jpeg');
+    }
+
     function validatePhotoFile(file, errorElId) {
         const errorEl = document.getElementById(errorElId);
         if (errorEl) errorEl.textContent = '';
-        if (!ALLOWED_PHOTO_TYPES.includes(file.type)) {
+        if (!ALLOWED_PHOTO_TYPES.includes(getPhotoMime(file))) {
             if (errorEl) errorEl.textContent = t('err_photo_type');
             return false;
         }
@@ -2426,10 +2677,16 @@
                     showAnimalPhotoPreview(dataUrl);
                 }
             };
+            img.onerror = function () { const el = document.getElementById(errorElId); if (el) el.textContent = t('err_photo_read'); };
             img.src = ev.target.result;
         };
+        reader.onerror = function () { const el = document.getElementById(errorElId); if (el) el.textContent = t('err_photo_read'); };
         reader.readAsDataURL(file);
     }
+
+    /* "Take Photo" opens the phone camera (capture attribute); "Choose from Gallery" / desktop opens the normal picker. */
+    function openAnimalPhotoCamera() { const el = document.getElementById('animalPhotoCameraInput'); if (el) el.click(); }
+    function openAnimalPhotoGallery() { const el = document.getElementById('animalPhotoInput'); if (el) el.click(); }
 
     function handleAnimalPhotoSelect(e) {
         const file = e.target.files && e.target.files[0];
@@ -2526,7 +2783,16 @@
         else { nextBtn.style.display = 'inline-block'; nextBtn.textContent = t('next'); }
         if (step === 4) recalcPayment();
         if (step === 5) renderReviewStep();
-        window.scrollTo({ top: document.getElementById('registration-view').offsetTop - 20, behavior: 'smooth' });
+        const stepsEl = document.getElementById('wizardSteps');
+        const activeStepEl = stepsEl ? stepsEl.querySelector('.wizard-step.active') : null;
+        if (stepsEl && activeStepEl && stepsEl.scrollWidth > stepsEl.clientWidth + 1) {
+            stepsEl.scrollTo({ left: Math.max(activeStepEl.offsetLeft - (stepsEl.clientWidth - activeStepEl.offsetWidth) / 2, 0), behavior: 'smooth' });
+        }
+        if (isMobileViewport() && stepsEl) {
+            window.scrollTo({ top: Math.max(stepsEl.getBoundingClientRect().top + window.pageYOffset - 78, 0), behavior: 'smooth' });
+        } else {
+            window.scrollTo({ top: document.getElementById('registration-view').offsetTop - 20, behavior: 'smooth' });
+        }
     }
 
     function wizardNext() { if (validateWizardStep(currentWizardStep)) goToWizardStep(Math.min(currentWizardStep + 1, TOTAL_WIZARD_STEPS)); }
@@ -2547,7 +2813,7 @@
             <div class="review-block">
                 <h6><i class="fa-solid fa-paw"></i> ${t('step_animal')}</h6>
                 <div class="d-flex align-items-center gap-3 mb-2">
-                    ${pendingAnimalPhotoDataUrl ? `<img src="${pendingAnimalPhotoDataUrl}" style="width:64px;height:64px;border-radius:12px;object-fit:cover;">` : `<div style="width:64px;height:64px;border-radius:12px;background:#d1fae5;display:flex;align-items:center;justify-content:center;"><i class="fa-solid ${ANIMAL_TYPE_ICON[species] || 'fa-paw'}" style="color:#166534;"></i></div>`}
+                    ${pendingAnimalPhotoDataUrl ? `<img src="${pendingAnimalPhotoDataUrl}" style="width:64px;height:64px;border-radius:12px;object-fit:cover;">` : `<div class="avatar-fallback" style="width:64px;height:64px;border-radius:12px;background:#d1fae5;display:flex;align-items:center;justify-content:center;"><i class="fa-solid ${ANIMAL_TYPE_ICON[species] || 'fa-paw'}" style="color:#166534;"></i></div>`}
                     <div>
                         <div class="fw-bold">${escapeHtml(document.getElementById('petName').value)}</div>
                         <div class="text-muted small">${escapeHtml(t(ANIMAL_TYPE_KEY_MAP[species] || species))} — ${escapeHtml(breed)}</div>
@@ -2566,7 +2832,7 @@
                 <div class="review-row"><span class="label">${t('discount')}</span><span class="value">− ${formatCurrency(pay.discount)}</span></div>
                 <div class="review-row"><span class="label">${t('total_amount')}</span><span class="value">${formatCurrency(pay.total)}</span></div>
                 <div class="review-row"><span class="label">${t('amount_received')}</span><span class="value">${formatCurrency(pay.received)}</span></div>
-                <div class="review-row"><span class="label">${t('pending_balance')}</span><span class="value" style="color:${pay.pending > 0 ? '#be123c' : '#15803d'}">${formatCurrency(Math.abs(pay.pending))}</span></div>
+                <div class="review-row"><span class="label">${t('pending_balance')}</span><span class="value" style="color:${pay.pending > 0 ? 'var(--due-text)' : 'var(--ok-text)'}">${formatCurrency(Math.abs(pay.pending))}</span></div>
             </div>
         `;
         document.getElementById('reviewContent').innerHTML = html;
@@ -2796,8 +3062,8 @@
                 : `<span class="badge bg-success-subtle text-success-emphasis" style="font-weight:700;">${t('paid')}</span>`;
             tbody.innerHTML += `
             <tr data-index="${idx}">
-                <td class="fw-bold">${patient._id}</td>
-                <td>
+                <td class="fw-bold" data-label="${escapeHtml(t('th_id'))}">${patient._id}</td>
+                <td data-label="${escapeHtml(t('th_animal'))}">
                     <div class="d-flex align-items-center">
                         <div class="me-2">${getAnimalAvatarHtml(patient)}</div>
                         <div>
@@ -2806,21 +3072,21 @@
                         </div>
                     </div>
                 </td>
-                <td>
+                <td data-label="${escapeHtml(t('th_farmer'))}">
                     <div>
                         <span class="d-block fw-bold mb-0">${escapeHtml(patient.owner)}</span>
                         <small class="text-muted d-block"><i class="fa-solid fa-location-dot fa-xs me-1 text-success"></i>${escapeHtml(patient.place || 'N/A')}</small>
                         <small class="text-muted"><i class="fa-solid fa-phone fa-xs me-1 text-success"></i>+91 ${escapeHtml(patient.phone || 'N/A')}</small>
                     </div>
                 </td>
-                <td><span class="badge ${badgeClass} py-2 px-3 rounded-2">${statusLabel(patient.status)}</span></td>
-                <td>
+                <td data-label="${escapeHtml(t('th_service'))}"><span class="badge ${badgeClass} py-2 px-3 rounded-2">${statusLabel(patient.status)}</span></td>
+                <td data-label="${escapeHtml(t('th_payment'))}">
                     <div class="small fw-bold">${formatCurrency(pay.total)}</div>
                     ${pendingBadge}
                 </td>
-                <td><small class="fw-semibold">${escapeHtml(patient.doctor || '—')}</small>${ownerTag}</td>
-                <td><small class="text-muted">${escapeHtml(patient.admitted_on || '—')}</small></td>
-                <td>${actionBtns}</td>
+                <td data-label="${escapeHtml(t('th_doctor'))}"><small class="fw-semibold">${escapeHtml(patient.doctor || '—')}</small>${ownerTag}</td>
+                <td data-label="${escapeHtml(t('th_admitted'))}"><small class="text-muted">${escapeHtml(patient.admitted_on || '—')}</small></td>
+                <td data-label="${escapeHtml(t('th_action'))}">${actionBtns}</td>
             </tr>
         `;
         });
@@ -3022,16 +3288,19 @@
         const canvasFlow = document.getElementById('analyticsChart');
         const canvasPie = document.getElementById('serviceChart');
         if (!canvasFlow || !canvasPie) return;
+        const th = getChartTheme();
+        Chart.defaults.color = th.text;
+        Chart.defaults.borderColor = th.grid;
         const trend = getAdmissionTrendData();
         flowChart = new Chart(canvasFlow.getContext('2d'), {
             type: 'bar',
             data: { labels: trend.labels, datasets: [{ label: t('no_of_admissions'), data: trend.data, backgroundColor: '#22c55e', borderColor: '#166534', borderWidth: 1, borderRadius: 8, maxBarThickness: 60 }] },
-            options: { responsive: true, maintainAspectRatio: false, plugins: { legend: { display: false } }, scales: { y: { beginAtZero: true, ticks: { precision: 0, stepSize: 1 } }, x: { grid: { display: false } } } }
+            options: { responsive: true, maintainAspectRatio: false, plugins: { legend: { display: false } }, scales: { y: { beginAtZero: true, ticks: { precision: 0, stepSize: 1, color: th.text }, grid: { color: th.grid } }, x: { grid: { display: false }, ticks: { color: th.text } } } }
         });
         servicePieChart = new Chart(canvasPie.getContext('2d'), {
             type: 'doughnut',
             data: getServiceChartData(),
-            options: { responsive: true, maintainAspectRatio: false, plugins: { legend: { position: 'bottom', labels: { boxWidth: 12, font: { family: 'Plus Jakarta Sans' } } } } }
+            options: { responsive: true, maintainAspectRatio: false, plugins: { legend: { position: 'bottom', labels: { boxWidth: 12, color: th.text, font: { family: 'Plus Jakarta Sans' } } } } }
         });
     }
 
@@ -3054,10 +3323,10 @@
         } else if (digits.length < 12) {
             input.style.borderColor = '#f87171'; input.style.boxShadow = '0 0 0 3px rgba(248,113,113,0.15)';
             input.setCustomValidity('Please enter all 12 digits of the Aadhaar number.');
-            if (hint) { hint.style.color = '#ef4444'; hint.innerHTML = `<i class="fa-solid fa-circle-exclamation me-1"></i>${digits.length}/12 ${t('digits_entered')}`; }
+            if (hint) { hint.style.color = 'var(--err-text)'; hint.innerHTML = `<i class="fa-solid fa-circle-exclamation me-1"></i>${digits.length}/12 ${t('digits_entered')}`; }
         } else {
             input.style.borderColor = '#22c55e'; input.style.boxShadow = '0 0 0 3px rgba(34,197,94,0.15)'; input.setCustomValidity('');
-            if (hint) { hint.style.color = '#15803d'; hint.innerHTML = `<i class="fa-solid fa-circle-check me-1"></i>${t('aadhaar_verified')}`; }
+            if (hint) { hint.style.color = 'var(--ok-text)'; hint.innerHTML = `<i class="fa-solid fa-circle-check me-1"></i>${t('aadhaar_verified')}`; }
         }
     }
 
@@ -3074,14 +3343,45 @@
     }
 
     /* ============= THEME (DARK / LIGHT) ============= */
-    function initTheme() { const saved = localStorage.getItem(LS_THEME) || 'light'; setTheme(saved, false); }
+    function getChartTheme() {
+        const dark = document.body.classList.contains('dark-mode');
+        return { text: dark ? '#cbd5e1' : '#475569', grid: dark ? 'rgba(148,163,184,0.18)' : 'rgba(15,23,42,0.08)' };
+    }
+    function applyChartTheme() {
+        if (typeof Chart === 'undefined') return;
+        const th = getChartTheme();
+        Chart.defaults.color = th.text;
+        Chart.defaults.borderColor = th.grid;
+        try {
+            if (flowChart) {
+                const sc = flowChart.options.scales;
+                sc.x.ticks.color = th.text; sc.y.ticks.color = th.text; sc.y.grid.color = th.grid;
+                flowChart.update('none');
+            }
+            if (servicePieChart) {
+                servicePieChart.options.plugins.legend.labels.color = th.text;
+                servicePieChart.update('none');
+            }
+        } catch (e) { console.warn('Chart theme update skipped:', e); }
+    }
+    function initTheme() {
+        let saved = 'light';
+        try { saved = localStorage.getItem(LS_THEME) || 'light'; } catch (e) {}
+        setTheme(saved, false);
+        /* keep other open tabs in sync */
+        window.addEventListener('storage', function (e) { if (e.key === LS_THEME && e.newValue) setTheme(e.newValue, false); });
+    }
     function toggleTheme() { const isDark = document.body.classList.contains('dark-mode'); setTheme(isDark ? 'light' : 'dark', true); }
     function setTheme(mode, persist) {
         const isDark = mode === 'dark';
         document.body.classList.toggle('dark-mode', isDark);
+        /* Bootstrap 5.3 theme switch: recolours forms, tables, badges, select arrows, etc. */
+        document.documentElement.setAttribute('data-bs-theme', isDark ? 'dark' : 'light');
+        document.documentElement.style.colorScheme = isDark ? 'dark' : 'light';
         const icons = [document.getElementById('themeToggleIcon'), document.getElementById('authThemeToggleIcon')];
         icons.forEach(icon => { if (icon) icon.className = isDark ? 'fa-solid fa-sun' : 'fa-solid fa-moon'; });
         if (persist) { try { localStorage.setItem(LS_THEME, mode); } catch(e) {} }
+        applyChartTheme();
         if (typeof currentAnalyticsSpecies !== 'undefined' && currentAnalyticsSpecies) renderAnimalAnalyticsModal();
     }
 
@@ -3125,7 +3425,7 @@
             animal_poultry: 'Chicken / Poultry', animal_pig: 'Pig', animal_dog: 'Dog', animal_cat: 'Cat',
             animal_horse: 'Horse', animal_rabbit: 'Rabbit', animal_other: 'Other',
             animal_photo: 'Animal Photo', drop_photo_here: 'Drag & drop a photo, or click to browse',
-            photo_types_hint: 'JPG, JPEG, PNG or WEBP — up to 5MB', change_photo: 'Change Photo', remove_photo: 'Remove',
+            photo_types_hint: 'JPG, JPEG, PNG or WEBP — up to 5MB', change_photo: 'Change Photo', remove_photo: 'Remove', take_photo: 'Take Photo', choose_gallery: 'Choose from Gallery', retake_photo: 'Retake', err_photo_read: 'Could not read this image. Please try another photo.',
             err_photo_type: 'Please upload a JPG, JPEG, PNG or WEBP image.', err_photo_size: 'Photo must be under 5MB.',
             care_service_setting: 'Care / Service Delivery Setting',
             status_routine: 'Routine (Vaccination/Deworming)', status_ai: 'Artificial Insemination (AI)',
@@ -3217,7 +3517,7 @@
             animal_poultry: 'கோழி', animal_pig: 'பன்றி', animal_dog: 'நாய்', animal_cat: 'பூனை',
             animal_horse: 'குதிரை', animal_rabbit: 'முயல்', animal_other: 'மற்றவை',
             animal_photo: 'விலங்கு புகைப்படம்', drop_photo_here: 'புகைப்படத்தை இழுத்து விடவும் அல்லது கிளிக் செய்யவும்',
-            photo_types_hint: 'JPG, JPEG, PNG அல்லது WEBP — 5MB வரை', change_photo: 'புகைப்படத்தை மாற்று', remove_photo: 'நீக்கு',
+            photo_types_hint: 'JPG, JPEG, PNG அல்லது WEBP — 5MB வரை', change_photo: 'புகைப்படத்தை மாற்று', remove_photo: 'நீக்கு', take_photo: 'புகைப்படம் எடு', choose_gallery: 'கேலரியில் இருந்து தேர்வு செய்', retake_photo: 'மீண்டும் எடு', err_photo_read: 'இந்தப் படத்தைப் படிக்க முடியவில்லை. வேறு புகைப்படத்தை முயற்சிக்கவும்.',
             err_photo_type: 'தயவுசெய்து JPG, JPEG, PNG அல்லது WEBP படத்தை பதிவேற்றவும்.', err_photo_size: 'புகைப்படம் 5MB க்கு குறைவாக இருக்க வேண்டும்.',
             care_service_setting: 'சேவை வகை',
             status_routine: 'வழக்கமான (தடுப்பூசி/புழு நீக்கம்)', status_ai: 'செயற்கை கருவூட்டல்',
@@ -3309,7 +3609,7 @@
             animal_poultry: 'కోళ్లు', animal_pig: 'పంది', animal_dog: 'కుక్క', animal_cat: 'పిల్లి',
             animal_horse: 'గుర్రం', animal_rabbit: 'కుందేలు', animal_other: 'ఇతర',
             animal_photo: 'జంతువు ఫోటో', drop_photo_here: 'ఫోటోను లాగి వదలండి లేదా క్లిక్ చేయండి',
-            photo_types_hint: 'JPG, JPEG, PNG లేదా WEBP — 5MB వరకు', change_photo: 'ఫోటోను మార్చండి', remove_photo: 'తొలగించు',
+            photo_types_hint: 'JPG, JPEG, PNG లేదా WEBP — 5MB వరకు', change_photo: 'ఫోటోను మార్చండి', remove_photo: 'తొలగించు', take_photo: 'ఫోటో తీయండి', choose_gallery: 'గ్యాలరీ నుండి ఎంచుకోండి', retake_photo: 'మళ్లీ తీయండి', err_photo_read: 'ఈ చిత్రాన్ని చదవలేకపోయింది. దయచేసి మరొక ఫోటోను ప్రయత్నించండి.',
             err_photo_type: 'దయచేసి JPG, JPEG, PNG లేదా WEBP చిత్రాన్ని అప్‌లోడ్ చేయండి.', err_photo_size: 'ఫోటో 5MB కంటే తక్కువగా ఉండాలి.',
             care_service_setting: 'సేవా రకం',
             status_routine: 'సాధారణ (టీకా/పురుగు నివారణ)', status_ai: 'కృత్రిమ గర్భధారణ',
@@ -3401,7 +3701,7 @@
             animal_poultry: 'मुर्गी पालन', animal_pig: 'सूअर', animal_dog: 'कुत्ता', animal_cat: 'बिल्ली',
             animal_horse: 'घोड़ा', animal_rabbit: 'खरगोश', animal_other: 'अन्य',
             animal_photo: 'पशु फोटो', drop_photo_here: 'फोटो खींचें और छोड़ें, या क्लिक करके ब्राउज़ करें',
-            photo_types_hint: 'JPG, JPEG, PNG या WEBP — 5MB तक', change_photo: 'फोटो बदलें', remove_photo: 'हटाएं',
+            photo_types_hint: 'JPG, JPEG, PNG या WEBP — 5MB तक', change_photo: 'फोटो बदलें', remove_photo: 'हटाएं', take_photo: 'फोटो खींचें', choose_gallery: 'गैलरी से चुनें', retake_photo: 'दोबारा खींचें', err_photo_read: 'यह छवि पढ़ी नहीं जा सकी। कृपया कोई दूसरी फोटो आज़माएं।',
             err_photo_type: 'कृपया JPG, JPEG, PNG या WEBP छवि अपलोड करें।', err_photo_size: 'फोटो 5MB से कम होनी चाहिए।',
             care_service_setting: 'देखभाल / सेवा प्रकार',
             status_routine: 'नियमित (टीकाकरण/कृमि नाशक)', status_ai: 'कृत्रिम गर्भाधान (एआई)',
@@ -3510,6 +3810,7 @@
             populateSpeciesSelect(document.getElementById('editSpecies'));
             if (curEditSpecies) document.getElementById('editSpecies').value = curEditSpecies;
         }
+        document.querySelectorAll('#app-sidebar .nav-link').forEach(a => { const lbl = a.querySelector('.sidebar-text'); if (lbl) { a.title = lbl.textContent.trim(); a.setAttribute('aria-label', a.title); } });
         renderSpeciesPickerGrid();
         if (document.getElementById('app-shell') && document.getElementById('app-shell').style.display !== 'none') {
             renderRecordsTable();
@@ -3712,15 +4013,15 @@
             const status = getPaymentStatus(pay);
             const badgeTxt = status === 'paid' ? 'Paid' : (status === 'partial' ? 'Partially Paid' : 'Pending');
             return `<tr onclick="openPaymentDetail('${p._id}')">
-                <td><span class="fw-bold d-block">${escapeHtml(p.owner)}</span><small class="text-muted">+91 ${escapeHtml(p.phone || 'N/A')}</small></td>
-                <td>${escapeHtml(t(ANIMAL_TYPE_KEY_MAP[p.species] || p.species))}<small class="text-muted d-block">${escapeHtml(p.name)}</small></td>
-                <td class="fw-bold">${p._id}</td>
-                <td>${escapeHtml(statusLabel(p.status))}</td>
-                <td>${formatCurrency(pay.total)}</td>
-                <td>${formatCurrency(pay.received)}</td>
-                <td class="fw-bold text-danger">${formatCurrency(pay.pending)}</td>
-                <td><small class="text-muted">${escapeHtml(p.admitted_on || '—')}</small></td>
-                <td><span class="payment-status-badge ${status}">${badgeTxt}</span></td>
+                <td data-label="Customer"><span class="fw-bold d-block">${escapeHtml(p.owner)}</span><small class="text-muted">+91 ${escapeHtml(p.phone || 'N/A')}</small></td>
+                <td data-label="Animal">${escapeHtml(t(ANIMAL_TYPE_KEY_MAP[p.species] || p.species))}<small class="text-muted d-block">${escapeHtml(p.name)}</small></td>
+                <td class="fw-bold" data-label="Admission ID">${p._id}</td>
+                <td data-label="Purpose">${escapeHtml(statusLabel(p.status))}</td>
+                <td data-label="Total">${formatCurrency(pay.total)}</td>
+                <td data-label="Paid">${formatCurrency(pay.received)}</td>
+                <td class="fw-bold text-danger" data-label="Pending">${formatCurrency(pay.pending)}</td>
+                <td data-label="Date"><small class="text-muted">${escapeHtml(p.admitted_on || '—')}</small></td>
+                <td data-label="Status"><span class="payment-status-badge ${status}">${badgeTxt}</span></td>
             </tr>`;
         }).join('');
     }
