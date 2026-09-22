@@ -924,6 +924,25 @@
         /* Auth screen toggle */
         body.dark-mode .auth-lang-theme-bar .theme-toggle-btn { background: #1e293b; border-color: #334155; color: #e2e8f0; }
         body.dark-mode .auth-tab-btn.active { box-shadow: none; }
+
+        /* ===== ANIMAL IMAGE PREVIEW (ledger thumbnail -> modal) ===== */
+        .animal-thumb-btn { display: inline-flex; padding: 0; margin: 0; border: 0; background: none; border-radius: 10px; cursor: pointer; line-height: 0; position: relative; transition: transform 0.15s ease, box-shadow 0.15s ease; }
+        .animal-thumb-btn::after { content: ''; position: absolute; inset: -4px; } /* larger touch target, no visual change */
+        .animal-thumb-btn:hover { transform: scale(1.08); box-shadow: 0 4px 14px rgba(20,184,166,0.4); }
+        .animal-thumb-btn:focus-visible { outline: 3px solid rgba(20,184,166,0.65); outline-offset: 2px; }
+        body.image-preview-open { overflow: hidden; }
+        .animal-image-stage { margin: 0 24px 16px; padding: 12px; border-radius: 16px; background: #f1f5f9; border: 1px solid #e2e8f0; display: flex; align-items: center; justify-content: center; min-height: 140px; }
+        .animal-image-stage img { display: block; max-width: 100%; max-height: min(62vh, 560px); width: auto; height: auto; object-fit: contain; border-radius: 10px; }
+        .animal-image-error { display: none; color: var(--err-text); font-weight: 600; font-size: 0.85rem; text-align: center; padding: 24px 8px; }
+        #animal-image-card .popup-details { margin: 0 24px; }
+        #animal-image-card h5 { padding: 22px 56px 14px 24px; margin: 0; font-weight: 800; }
+        body.dark-mode .animal-image-stage { background: #0b1220; border-color: #334155; }
+        @media (max-width: 575.98px) {
+            .animal-image-stage { margin: 0 14px 14px; padding: 8px; }
+            #animal-image-card .popup-details { margin: 0 14px; }
+            #animal-image-card h5 { padding: 18px 52px 12px 16px; }
+            #animal-image-card { padding-bottom: 18px; }
+        }
     </style>
 </head>
 
@@ -1823,6 +1842,24 @@
                         <i class="fa-solid fa-check-double me-1"></i> Mark as Fully Paid
                     </button>
                 </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- ===== ANIMAL IMAGE PREVIEW MODAL ===== -->
+    <div id="animal-image-overlay" class="app-modal-overlay" role="dialog" aria-modal="true" aria-labelledby="animalImagePreviewTitle" onclick="if (event.target === this) closeAnimalImagePreview()">
+        <div id="animal-image-card" class="app-modal-card" style="max-width:640px;">
+            <div class="modal-accent-bar" style="background:var(--gradient-teal);"></div>
+            <button type="button" id="animalImageCloseBtn" onclick="closeAnimalImagePreview()" class="modal-close-btn" title="Close" aria-label="Close"><i class="fa-solid fa-xmark"></i></button>
+            <h5 id="animalImagePreviewTitle" data-i18n="animal_photo">Animal Photo</h5>
+            <div class="animal-image-stage">
+                <img id="animalImagePreviewImg" alt="">
+                <div id="animalImagePreviewError" class="animal-image-error" role="alert"></div>
+            </div>
+            <div class="popup-details">
+                <div class="popup-detail-row"><span class="popup-detail-label" data-i18n="animal_tag_id">Animal / Tag ID</span><span class="popup-detail-value fw-bold" id="animalImagePreviewName">—</span></div>
+                <div class="popup-detail-row"><span class="popup-detail-label" data-i18n="category_type">Animal Type</span><span class="popup-detail-value" id="animalImagePreviewType">—</span></div>
+                <div class="popup-detail-row"><span class="popup-detail-label" data-i18n="breed">Breed</span><span class="popup-detail-value" id="animalImagePreviewBreed">—</span></div>
             </div>
         </div>
     </div>
@@ -3015,8 +3052,12 @@
         if (goToRecords) switchView('records');
     }
 
-    function getAnimalAvatarHtml(patient) {
-        if (patient.photo) return `<img src="${patient.photo}" class="table-avatar" alt="${escapeHtml(patient.name)}">`;
+    function getAnimalAvatarHtml(patient, idx) {
+        if (patient.photo) {
+            /* Uploaded photo: the thumbnail opens the full-size preview of this exact image. */
+            const label = t('view_photo') + ': ' + (patient.name || '');
+            return `<button type="button" class="animal-thumb-btn" onclick="openAnimalImagePreview(${idx}, this)" title="${escapeHtml(label)}" aria-label="${escapeHtml(label)}" aria-haspopup="dialog"><img src="${patient.photo}" class="table-avatar" alt="${escapeHtml(patient.name)}"></button>`;
+        }
         const icon = ANIMAL_TYPE_ICON[patient.species] || 'fa-paw';
         const stock = speciesImageUrl(patient.species, 100);
         return `<div class="table-avatar-stock" style="background-image:url('${stock}');"><i class="fa-solid ${icon}"></i></div>`;
@@ -3065,7 +3106,7 @@
                 <td class="fw-bold" data-label="${escapeHtml(t('th_id'))}">${patient._id}</td>
                 <td data-label="${escapeHtml(t('th_animal'))}">
                     <div class="d-flex align-items-center">
-                        <div class="me-2">${getAnimalAvatarHtml(patient)}</div>
+                        <div class="me-2">${getAnimalAvatarHtml(patient, idx)}</div>
                         <div>
                             <span class="d-block fw-bold mb-0">${escapeHtml(patient.name)}</span>
                             <small class="text-muted">${escapeHtml(t(ANIMAL_TYPE_KEY_MAP[patient.species] || patient.species))} • <span class="text-success fw-semibold">${escapeHtml(patient.breed || 'Unknown')}</span></small>
@@ -3093,6 +3134,42 @@
     }
 
     function showAuthError() { showToast(t('err_not_authorized'), 'error'); }
+
+    /* ---- Animal image preview ---- */
+    let _imagePreviewTrigger = null;
+    function openAnimalImagePreview(index, triggerEl) {
+        const patient = database[index];
+        if (!patient || !patient.photo) return;
+        const img = document.getElementById('animalImagePreviewImg');
+        const err = document.getElementById('animalImagePreviewError');
+        err.style.display = 'none'; img.style.display = 'block';
+        img.onerror = function () { img.style.display = 'none'; err.textContent = t('err_photo_read'); err.style.display = 'block'; };
+        img.alt = patient.name || t('animal_photo');
+        img.src = patient.photo;   /* the exact image stored for this admission */
+        document.getElementById('animalImagePreviewName').textContent = patient.name || '—';
+        document.getElementById('animalImagePreviewType').textContent = t(ANIMAL_TYPE_KEY_MAP[patient.species] || patient.species) || '—';
+        document.getElementById('animalImagePreviewBreed').textContent = patient.breed || '—';
+        _imagePreviewTrigger = triggerEl || document.activeElement;
+        document.getElementById('animal-image-overlay').classList.add('active');
+        document.body.classList.add('image-preview-open');
+        document.getElementById('animalImageCloseBtn').focus();
+    }
+    function closeAnimalImagePreview() {
+        const overlay = document.getElementById('animal-image-overlay');
+        if (!overlay.classList.contains('active')) return;
+        overlay.classList.remove('active');
+        document.body.classList.remove('image-preview-open');
+        const img = document.getElementById('animalImagePreviewImg');
+        img.onerror = null; img.removeAttribute('src');
+        if (_imagePreviewTrigger && document.body.contains(_imagePreviewTrigger)) _imagePreviewTrigger.focus();
+        _imagePreviewTrigger = null;
+    }
+    document.addEventListener('keydown', function (e) {
+        const overlay = document.getElementById('animal-image-overlay');
+        if (!overlay || !overlay.classList.contains('active')) return;
+        if (e.key === 'Escape') { closeAnimalImagePreview(); }
+        else if (e.key === 'Tab') { e.preventDefault(); document.getElementById('animalImageCloseBtn').focus(); }
+    });
 
     function filterRecords() {
         const query = document.getElementById('searchInput').value.toLowerCase();
@@ -3425,7 +3502,7 @@
             animal_poultry: 'Chicken / Poultry', animal_pig: 'Pig', animal_dog: 'Dog', animal_cat: 'Cat',
             animal_horse: 'Horse', animal_rabbit: 'Rabbit', animal_other: 'Other',
             animal_photo: 'Animal Photo', drop_photo_here: 'Drag & drop a photo, or click to browse',
-            photo_types_hint: 'JPG, JPEG, PNG or WEBP — up to 5MB', change_photo: 'Change Photo', remove_photo: 'Remove', take_photo: 'Take Photo', choose_gallery: 'Choose from Gallery', retake_photo: 'Retake', err_photo_read: 'Could not read this image. Please try another photo.',
+            photo_types_hint: 'JPG, JPEG, PNG or WEBP — up to 5MB', change_photo: 'Change Photo', remove_photo: 'Remove', take_photo: 'Take Photo', choose_gallery: 'Choose from Gallery', retake_photo: 'Retake', err_photo_read: 'Could not read this image. Please try another photo.', view_photo: 'View photo',
             err_photo_type: 'Please upload a JPG, JPEG, PNG or WEBP image.', err_photo_size: 'Photo must be under 5MB.',
             care_service_setting: 'Care / Service Delivery Setting',
             status_routine: 'Routine (Vaccination/Deworming)', status_ai: 'Artificial Insemination (AI)',
@@ -3517,7 +3594,7 @@
             animal_poultry: 'கோழி', animal_pig: 'பன்றி', animal_dog: 'நாய்', animal_cat: 'பூனை',
             animal_horse: 'குதிரை', animal_rabbit: 'முயல்', animal_other: 'மற்றவை',
             animal_photo: 'விலங்கு புகைப்படம்', drop_photo_here: 'புகைப்படத்தை இழுத்து விடவும் அல்லது கிளிக் செய்யவும்',
-            photo_types_hint: 'JPG, JPEG, PNG அல்லது WEBP — 5MB வரை', change_photo: 'புகைப்படத்தை மாற்று', remove_photo: 'நீக்கு', take_photo: 'புகைப்படம் எடு', choose_gallery: 'கேலரியில் இருந்து தேர்வு செய்', retake_photo: 'மீண்டும் எடு', err_photo_read: 'இந்தப் படத்தைப் படிக்க முடியவில்லை. வேறு புகைப்படத்தை முயற்சிக்கவும்.',
+            photo_types_hint: 'JPG, JPEG, PNG அல்லது WEBP — 5MB வரை', change_photo: 'புகைப்படத்தை மாற்று', remove_photo: 'நீக்கு', take_photo: 'புகைப்படம் எடு', choose_gallery: 'கேலரியில் இருந்து தேர்வு செய்', retake_photo: 'மீண்டும் எடு', err_photo_read: 'இந்தப் படத்தைப் படிக்க முடியவில்லை. வேறு புகைப்படத்தை முயற்சிக்கவும்.', view_photo: 'புகைப்படத்தைப் பார்க்க',
             err_photo_type: 'தயவுசெய்து JPG, JPEG, PNG அல்லது WEBP படத்தை பதிவேற்றவும்.', err_photo_size: 'புகைப்படம் 5MB க்கு குறைவாக இருக்க வேண்டும்.',
             care_service_setting: 'சேவை வகை',
             status_routine: 'வழக்கமான (தடுப்பூசி/புழு நீக்கம்)', status_ai: 'செயற்கை கருவூட்டல்',
@@ -3609,7 +3686,7 @@
             animal_poultry: 'కోళ్లు', animal_pig: 'పంది', animal_dog: 'కుక్క', animal_cat: 'పిల్లి',
             animal_horse: 'గుర్రం', animal_rabbit: 'కుందేలు', animal_other: 'ఇతర',
             animal_photo: 'జంతువు ఫోటో', drop_photo_here: 'ఫోటోను లాగి వదలండి లేదా క్లిక్ చేయండి',
-            photo_types_hint: 'JPG, JPEG, PNG లేదా WEBP — 5MB వరకు', change_photo: 'ఫోటోను మార్చండి', remove_photo: 'తొలగించు', take_photo: 'ఫోటో తీయండి', choose_gallery: 'గ్యాలరీ నుండి ఎంచుకోండి', retake_photo: 'మళ్లీ తీయండి', err_photo_read: 'ఈ చిత్రాన్ని చదవలేకపోయింది. దయచేసి మరొక ఫోటోను ప్రయత్నించండి.',
+            photo_types_hint: 'JPG, JPEG, PNG లేదా WEBP — 5MB వరకు', change_photo: 'ఫోటోను మార్చండి', remove_photo: 'తొలగించు', take_photo: 'ఫోటో తీయండి', choose_gallery: 'గ్యాలరీ నుండి ఎంచుకోండి', retake_photo: 'మళ్లీ తీయండి', err_photo_read: 'ఈ చిత్రాన్ని చదవలేకపోయింది. దయచేసి మరొక ఫోటోను ప్రయత్నించండి.', view_photo: 'ఫోటోను చూడండి',
             err_photo_type: 'దయచేసి JPG, JPEG, PNG లేదా WEBP చిత్రాన్ని అప్‌లోడ్ చేయండి.', err_photo_size: 'ఫోటో 5MB కంటే తక్కువగా ఉండాలి.',
             care_service_setting: 'సేవా రకం',
             status_routine: 'సాధారణ (టీకా/పురుగు నివారణ)', status_ai: 'కృత్రిమ గర్భధారణ',
@@ -3701,7 +3778,7 @@
             animal_poultry: 'मुर्गी पालन', animal_pig: 'सूअर', animal_dog: 'कुत्ता', animal_cat: 'बिल्ली',
             animal_horse: 'घोड़ा', animal_rabbit: 'खरगोश', animal_other: 'अन्य',
             animal_photo: 'पशु फोटो', drop_photo_here: 'फोटो खींचें और छोड़ें, या क्लिक करके ब्राउज़ करें',
-            photo_types_hint: 'JPG, JPEG, PNG या WEBP — 5MB तक', change_photo: 'फोटो बदलें', remove_photo: 'हटाएं', take_photo: 'फोटो खींचें', choose_gallery: 'गैलरी से चुनें', retake_photo: 'दोबारा खींचें', err_photo_read: 'यह छवि पढ़ी नहीं जा सकी। कृपया कोई दूसरी फोटो आज़माएं।',
+            photo_types_hint: 'JPG, JPEG, PNG या WEBP — 5MB तक', change_photo: 'फोटो बदलें', remove_photo: 'हटाएं', take_photo: 'फोटो खींचें', choose_gallery: 'गैलरी से चुनें', retake_photo: 'दोबारा खींचें', err_photo_read: 'यह छवि पढ़ी नहीं जा सकी। कृपया कोई दूसरी फोटो आज़माएं।', view_photo: 'फोटो देखें',
             err_photo_type: 'कृपया JPG, JPEG, PNG या WEBP छवि अपलोड करें।', err_photo_size: 'फोटो 5MB से कम होनी चाहिए।',
             care_service_setting: 'देखभाल / सेवा प्रकार',
             status_routine: 'नियमित (टीकाकरण/कृमि नाशक)', status_ai: 'कृत्रिम गर्भाधान (एआई)',
